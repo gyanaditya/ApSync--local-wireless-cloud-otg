@@ -1,1 +1,122 @@
 
+ApSync User Manual & Wiki
+Complete guide to high-performance local network, cloud, and filesystem synchronization on Android.
+
+Introduction & Architecture
+ApSync is a high-performance Android backup and bidirectional synchronization engine designed for users who require full control over their data without third-party server relays. Whether backing up camera rolls to a home TrueNAS server, syncing documents between multiple folders on an SD card, or pushing archives to Google Drive, ApSync handles transfers directly over your local Wi-Fi or encrypted WAN connections.
+
+Multi-Protocol Core
+Native client implementations for SMB2/SMB3, SFTP (SSH-256), FTP/FTPS, WebDAV, and direct REST APIs for cloud storage providers.
+
+Zero Middleman Relays
+Connections occur peer-to-peer between your Android device and destination endpoints. No external servers ever intercept or relay your files.
+
+DataSync Service
+Runs as an Android 14+ compliant foreground data sync service, maintaining open TCP sockets through Doze mode without battery drain.
+
+Quick Start Guide
+Set up your first automated sync job in under two minutes:
+
+1
+Grant Storage Permission
+ApSync requires All Files Access (MANAGE_EXTERNAL_STORAGE) to recursively mirror non-media folders (documents, backups, project code) without prompting for every single file.
+
+2
+Scan Your Local Network
+Navigate to the Configured Hosts tab and tap Scan LAN. ApSync scans your subnet in milliseconds to discover SMB and SFTP servers automatically.
+
+3
+Add Server Credentials
+Tap your discovered server, select protocol (SMB, SFTP, FTP, or WebDAV), enter your credentials, and click Test Connection.
+
+4
+Create a Sync Job
+Switch to the Sync Jobs tab, tap + New Job, pick your local folder and remote destination path, choose your sync direction, and tap Save.
+
+LAN Discovery & Port Scanning
+ApSync features an asynchronous subnet scanner that identifies active hosts on your local Wi-Fi network:
+
+Zero-Config Probing: Scans the /24 subnet across standard storage ports: 445 (SMB), 22 (SFTP), 21 (FTP), and 80/443/8080 (WebDAV).
+Real-Time Latency: Reports exact round-trip ping latency in milliseconds for every discovered device.
+Share Auto-Discovery: For SMB hosts, ApSync enumerates public and authenticated shares dynamically without requiring manual share path typing.
+Configuring Remote Hosts
+Protocol	Default Port	Supported Authentication	Ideal Target
+SMB / CIFS	445	NTLMv2, Username/Password, Guest	Windows Shared Folders, Samba, Synology, TrueNAS
+SFTP	22	Password, Ed25519 / RSA SSH Keys	Linux Servers, Raspberry Pi, VPS, macOS
+FTP / FTPS	21	Plaintext, Explicit TLS/SSL, Anonymous	Legacy NAS devices, seedboxes, web hosting servers
+WebDAV	80 / 443	Basic, Digest Auth, Bearer Token	Nextcloud, ownCloud, QNAP WebDAV
+USB OTG	N/A	Direct Hardware Access	External USB SSDs, Flash Drives, SD Card Readers
+Cloud Remotes (OAuth2)
+In addition to local NAS servers, ApSync supports direct integration with popular cloud storage services without requiring external apps:
+
+Google Drive: Connect via secure Google OAuth2 login. Sync any Google Drive folder or team drive.
+Microsoft OneDrive: Full Personal and Business OneDrive folder synchronization.
+MEGA: High-speed end-to-end encrypted storage synchronization.
+Dropbox: Official API integration for seamless file mirroring.
+🔒 Zero Server Relays
+Cloud authentication tokens are stored securely in Android's hardware-backed Keystore / EncryptedSharedPreferences on your phone and communicated directly to the provider's API.
+
+Creating & Managing Sync Jobs
+Each Sync Job represents an automated or manual synchronization rule between a source directory and a destination directory.
+
+Sync Types
+Network Mode: Syncs between an Android storage folder and a remote host (SMB, SFTP, FTP, Cloud).
+Local-to-Local Mode: Syncs between two folders on the device (e.g. Internal Storage $\leftrightarrow$ MicroSD Card or USB OTG).
+Directions & Conflict Strategies
+Sync Directions
+Upload (Local $ ightarrow$ Remote): Sends new and updated files from Android to the destination server.
+Download (Remote $ ightarrow$ Local): Pulls updates from the server into your Android storage.
+Bidirectional (Two-Way): Keeps both locations synchronized, transferring newer files to both ends.
+Conflict Resolution Strategies
+Strategy	Behavior
+Overwrite	Overwrites destination files when size or modification timestamps differ.
+Skip	Skips files that already exist on the destination, transferring only completely new files.
+Rename	Preserves both copies by appending timestamp suffixes (e.g., file_conflict_20261114.pdf).
+Smart File Filters
+Filters let you control exactly which files are transferred within a synced folder tree:
+
+Include / Exclude by Pattern: E.g., include *.jpg, *.png, *.mp4 or exclude *.tmp, .DS_Store, thumbs.db.
+Size Restrictions: Exclude files smaller than or larger than a specified threshold (e.g. skip files > 2 GB on cellular data).
+Date Range Filtering: Only sync files modified within the last $ days.
+Automated Scheduling & Safeguards
+Sync jobs can be executed manually or automated via configurable trigger conditions:
+
+Manual: Trigger via the Run Sync button or Run All.
+Wi-Fi Only: Syncs only when connected to an unmetered Wi-Fi network, preventing cellular data consumption.
+Charging Only: Executes only when the device is plugged into AC or wireless power.
+Periodic / Daily Intervals: Automatically triggers every $ hours or at a specific time of day.
+Battery Safeguard: Automatically suspends ongoing sync operations when device battery drops below your chosen threshold (default 15%).
+MD5 Checksum Verification
+To guard against network packet corruption or silent storage errors, ApSync features optional end-to-end checksum verification:
+
+Calculates MD5 hashes on the fly during transfer.
+Queries remote server checksums (via SSH, WebDAV headers, or cloud metadata).
+If a hash mismatch occurs, ApSync logs the event, halts the corruption, and re-queues the file.
+AES-256-GCM Configuration Backup
+Never lose your configured hosts, cloud connections, or sync job setups:
+
+Export Configuration: Exports all configured hosts and jobs into an encrypted JSON envelope (apsync_encrypted_backup).
+Enterprise Encryption: Protected with standard PBKDF2 key derivation (65,536 iterations) and AES-256-GCM authenticated encryption with a 96-bit random IV and 128-bit authentication tag.
+Restore Anywhere: Import your backup file on any new Android device and enter your master password to restore your complete sync topology instantly.
+ApSync Pro & In-App Products
+ApSync offers a generous Free tier alongside a lifetime Pro license for advanced power users:
+
+Feature	ApSync Free	ApSync Pro
+Configured Hosts	Unlimited	Unlimited
+Concurrent Active Jobs	Up to 3 Active Jobs	Unlimited
+Automated Background Scheduling	Manual & Basic	Full Smart Triggers
+MD5 Checksum Verification	Standard	Full Real-Time
+Developer Support	Community	Priority In-App Keys
+Available Google Play In-App Products
+wifisync_pro — ⭐ Permanent Lifetime Pro License.
+support_dev_coffee — ☕ Buy Developer a Coffee.
+support_dev_heart — ❤️ Developer Appreciation Tip.
+Troubleshooting & FAQ
+Q: Why does ApSync require All Files Access?
+Google Play's default Storage Access Framework requires user confirmation popups for individual directories and cannot mirror non-media files (such as database files, system archives, or code) automatically in the background. All Files Access allows ApSync to perform true background synchronization without interrupting you.
+
+Q: Can ApSync sync over the Internet / outside home Wi-Fi?
+Yes. If you have a static IP, dynamic DNS (DDNS), or a VPN (such as WireGuard or Tailscale), you can point ApSync to your remote server address via SFTP, WebDAV, or FTPS.
+
+Q: What happens if Wi-Fi disconnects mid-transfer?
+ApSync's foreground service pauses the job safely without corrupting files. Once Wi-Fi reconnects, the sync engine resumes the remaining queue automatically.
